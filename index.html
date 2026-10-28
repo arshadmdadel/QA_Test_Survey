@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TestCase Hub</title>
+<style>
+:root{--bg:#f4f6fa;--card:#fff;--ink:#1c2430;--mut:#667085;--line:#e1e5ec;--pri:#2457d6;--ok:#14804a;--bad:#c62828;--warn:#b26a00}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 system-ui,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:#14213d;color:#fff;padding:12px 16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+header h1{margin:0;font-size:18px}
+.hright{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+header label{font-size:12px;opacity:.85;margin-right:6px}
+nav{display:flex;flex-wrap:wrap;gap:4px;padding:8px 12px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+nav button{border:0;background:transparent;padding:8px 12px;border-radius:6px;cursor:pointer;font:inherit;color:var(--mut)}
+nav button.on{background:var(--pri);color:#fff}
+main{padding:14px;max-width:1200px;margin:auto}
+section{display:none}
+section.on{display:block}
+h2{margin:6px 0 12px;font-size:18px}
+h3{margin:18px 0 8px;font-size:15px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.full{grid-column:1/-1}
+label{display:flex;flex-direction:column;font-size:12px;color:var(--mut);gap:3px}
+input,select,textarea{font:inherit;padding:7px 8px;border:1px solid #c7cdd8;border-radius:6px;background:#fff;color:var(--ink);width:100%}
+textarea{min-height:64px;resize:vertical}
+.btn{font:inherit;padding:7px 14px;border-radius:6px;border:1px solid #c7cdd8;background:#fff;cursor:pointer}
+.btn.pri{background:var(--pri);border-color:var(--pri);color:#fff}
+.btn.del{color:var(--bad);border-color:#e7b4b4}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.sm{padding:3px 9px;font-size:12px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;background:#fff}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:#eef2f9;font-size:12px;white-space:nowrap}
+td.n{text-align:right;white-space:nowrap}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:12px;font-weight:600;background:#e8eaef;color:#444;white-space:nowrap}
+.badge.ok{background:#d8f1e3;color:var(--ok)}
+.badge.bad{background:#fbdcdc;color:var(--bad)}
+.badge.warn{background:#fdebc8;color:var(--warn)}
+.msg{padding:9px 12px;border-radius:6px;margin-top:6px;font-size:13px}
+.msg.err{background:#fdecec;color:#8f1d1d;border:1px solid #f3b9b9}
+.msg.ok{background:#e6f6ec;color:#0f5e37;border:1px solid #b7e0c8}
+.msg ul{margin:0;padding-left:18px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.tile{background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px}
+.tile b{display:block;font-size:22px}
+.tile span{font-size:12px;color:var(--mut)}
+.bar{background:#e8eaef;border-radius:4px;height:10px;min-width:90px}
+.bar i{display:block;height:100%;border-radius:4px;background:var(--ok)}
+.empty{color:var(--mut);padding:14px;text-align:center}
+.thumb{max-width:100%;max-height:140px;border:1px solid var(--line);border-radius:6px;margin-top:6px}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+#modal[hidden]{display:none}
+#modal div{background:#fff;padding:12px;border-radius:8px;max-width:95vw;max-height:95vh;overflow:auto;text-align:center}
+#modal img{max-width:100%;max-height:80vh;display:block;margin:0 auto 10px}
+.hint{font-size:12px;color:var(--mut)}
+@media(max-width:600px){main{padding:8px}nav button{padding:7px 9px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>TestCase Hub</h1>
+  <div class="hright">
+    <div><label style="display:inline">Active project</label><select id="activeProject" style="width:auto;min-width:200px"></select></div>
+    <span id="headBadge"></span>
+  </div>
+</header>
+<nav id="nav">
+  <button data-tab="dashboard" class="on">Dashboard / Search</button>
+  <button data-tab="projects">Projects</button>
+  <button data-tab="cases">Test Cases</button>
+  <button data-tab="exec">Execution</button>
+  <button data-tab="bugs">Bug Linking</button>
+  <button data-tab="stats">Statistics</button>
+  <button data-tab="export">Excel Export</button>
+</nav>
+<main>
+
+<!-- DASHBOARD -->
+<section id="tab-dashboard" class="on">
+  <h2>Dashboard / Search</h2>
+  <div class="card grid">
+    <label>Project<select id="fProj"></select></label>
+    <label>Module<select id="fMod"></select></label>
+    <label>Result<select id="fRes"></select></label>
+    <label>Tester<select id="fTester"></select></label>
+    <div class="full"><button type="button" class="btn" id="fReset">Reset filters</button></div>
+  </div>
+  <div class="tiles" id="dashTiles"></div>
+  <div class="scroll" id="dashTable"></div>
+</section>
+
+<!-- PROJECTS -->
+<section id="tab-projects">
+  <h2>Projects</h2>
+  <form id="projForm" class="card grid" novalidate>
+    <label>Project name<input id="pName"></label>
+    <label>Build number<input id="pBuild"></label>
+    <label>Environment<input id="pEnv" placeholder="e.g. QA, Staging"></label>
+    <label>OS<input id="pOS" placeholder="e.g. Windows 11, Android 14"></label>
+    <label>Device<input id="pDevice" placeholder="e.g. Pixel 8, Chrome desktop"></label>
+    <label>Start date<input type="date" id="pStart"></label>
+    <label>End date<input type="date" id="pEnd"></label>
+    <div class="full"><button class="btn pri" type="submit">Add project</button></div>
+    <div id="projMsg" class="msg full" hidden></div>
+  </form>
+  <div class="scroll" id="projTable"></div>
+</section>
+
+<!-- TEST CASES -->
+<section id="tab-cases">
+  <h2>Test Case Manager</h2>
+  <div id="casesNoProj"></div>
+  <form id="caseForm" class="card" novalidate>
+    <h3 id="caseTitle" style="margin-top:0">Add test case</h3>
+    <div class="grid">
+      <label>Test type<select id="cType"><option value="">Select…</option><option>Smoke test</option><option>Acceptance test</option></select></label>
+      <label>Module<input id="cModule" list="moduleList"></label>
+      <label>Submodule<input id="cSub"></label>
+      <label>Functionality<input id="cFunc"></label>
+      <label class="full">Actions<textarea id="cActions"></textarea></label>
+      <label class="full">Expected result<textarea id="cExpected"></textarea></label>
+      <div class="full"><button class="btn pri" type="submit" id="caseSave">Add test case</button> <button class="btn" type="button" id="caseCancel" hidden>Cancel edit</button></div>
+      <div id="caseMsg" class="msg full" hidden></div>
+    </div>
+    <datalist id="moduleList"></datalist>
+  </form>
+  <div class="scroll" id="caseTable"></div>
+</section>
+
+<!-- EXECUTION -->
+<section id="tab-exec">
+  <h2>Execution</h2>
+  <div id="execNoProj"></div>
+  <form id="execForm" class="card" novalidate hidden>
+    <h3 id="execTitle" style="margin-top:0">Execute test case</h3>
+    <div class="grid">
+      <label>Result<select id="eResult"></select></label>
+      <label>Tester<input id="eTester"></label>
+      <label>Time spent (min)<input id="eTime" inputmode="decimal" placeholder="e.g. 5"></label>
+      <label>Screenshot (optional)<input type="file" id="eShot" accept="image/*"></label>
+      <label class="full">Comment<textarea id="eComment" placeholder="Failed: include the Bug ID, e.g. QATC-1234567. Failed → Passed: write a retest comment."></textarea></label>
+      <div class="full" id="ePreview"></div>
+      <div class="full"><button class="btn pri" type="submit">Save result</button> <button class="btn" type="button" id="execClose">Close</button></div>
+      <div id="execMsg" class="msg full" hidden></div>
+    </div>
+  </form>
+  <div class="scroll" id="execTable"></div>
+</section>
+
+<!-- BUG LINKING -->
+<section id="tab-bugs">
+  <h2>Bug Linking</h2>
+  <p class="hint">Failed cases of the active project. The Bug ID is stored in the comment (format QATC-1234567).</p>
+  <div id="bugMsg" class="msg" hidden></div>
+  <div class="scroll" id="bugTable"></div>
+</section>
+
+<!-- STATISTICS -->
+<section id="tab-stats">
+  <h2>Statistics</h2>
+  <h3>Per project</h3>
+  <div class="scroll" id="statProj"></div>
+  <h3>Release status (active project)</h3>
+  <div id="statRelease"></div>
+  <h3>Pass rate per module (active project)</h3>
+  <div class="scroll" id="statMod"></div>
+</section>
+
+<!-- EXPORT -->
+<section id="tab-export">
+  <h2>Excel Export</h2>
+  <div class="card" id="exportBox"></div>
+  <div id="exportMsg" class="msg" hidden></div>
+</section>
+</main>
+
+<div id="modal" hidden><div><img id="modalImg" alt="Screenshot"><button class="btn" type="button" id="modalClose">Close</button></div></div>
+
+<script>
+"use strict";
+/* ---------- state ---------- */
+const RESULTS=['Passed','Failed','Not tested','Not available','Not implemented'];
+const BUG=/QATC-\d+/;
+const S={projects:[],cases:[],active:null,dashProj:null,editCase:null,execCase:null,pendingShot:undefined,uid:1,f:{mod:'',res:'',tester:''}};
+
+/* ---------- helpers ---------- */
+const $=id=>document.getElementById(id);
+const val=id=>$(id).value.trim();
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const tcId=c=>'TC-'+String(c.id).padStart(3,'0');
+const proj=id=>S.projects.find(p=>p.id===id);
+const casesOf=pid=>S.cases.filter(c=>c.pid===pid);
+const label=c=>c.module+' > '+c.sub+' > '+c.func;
+function msg(id,type,list){const el=$(id);el.className='msg '+type+(el.classList.contains('full')?' full':'');el.innerHTML=list.length>1?'<ul>'+list.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':esc(list[0]);el.hidden=false;}
+function clearMsg(id){$(id).hidden=true;}
+function resBadge(r){const k=r==='Passed'?'ok':r==='Failed'?'bad':r==='Not tested'?'':'warn';return '<span class="badge '+k+'">'+esc(r)+'</span>';}
+function relBadge(ready){return '<span class="badge '+(ready?'ok':'bad')+'">'+(ready?'Ready':'Not ready')+'</span>';}
+function noProj(){return '<div class="msg err">Create or select a project first (Projects tab).</div>';}
+function fillSel(id,opts,cur){const el=$(id);el.innerHTML=opts.map(o=>'<option value="'+esc(o[0])+'">'+esc(o[1])+'</option>').join('');el.value=String(cur==null?'':cur);if(el.value!==String(cur==null?'':cur))el.value=opts.length?opts[0][0]:'';}
+
+/* ---------- statistics (always calculated) ---------- */
+function stats(list){
+  const t=list.length,c=r=>list.filter(x=>x.result===r).length;
+  const p=c('Passed'),f=c('Failed'),n=c('Not tested'),na=c('Not available'),ni=c('Not implemented');
+  const mins=list.reduce((a,x)=>a+(Number(x.time)||0),0);
+  const pct=v=>t?Math.round(v/t*1000)/10:0;
+  return{t,p,f,n,na,ni,pp:pct(p),fp:pct(f),np:pct(n),nap:pct(na),nip:pct(ni),mins,hours:Math.round(mins/60*100)/100};
+}
+function release(list){
+  const s=stats(list),reasons=[];
+  if(!s.t)reasons.push('The project has no test cases.');
+  else if(s.pp<90)reasons.push('Pass rate '+s.pp+'% is below 90%.');
+  const nb=list.filter(x=>x.result==='Failed'&&!BUG.test(x.bugId||'')).length;
+  if(nb)reasons.push(nb+' failed case(s) have no Bug ID.');
+  return{ready:!reasons.length,reasons,s};
+}
+
+/* ---------- navigation ---------- */
+function showTab(t){
+  document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id==='tab-'+t));
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+}
+$('nav').addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(b)showTab(b.dataset.tab);});
+$('activeProject').addEventListener('change',e=>setActive(e.target.value?+e.target.value:null));
+function setActive(id){S.active=id;S.dashProj=id;S.f={mod:'',res:'',tester:''};resetCaseForm();closeExec();render();}
+
+/* ---------- projects ---------- */
+$('projForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const v={name:val('pName'),build:val('pBuild'),env:val('pEnv'),os:val('pOS'),device:val('pDevice'),start:val('pStart'),end:val('pEnd')};
+  const L={name:'Project name',build:'Build number',env:'Environment',os:'OS',device:'Device',start:'Start date',end:'End date'};
+  const er=[];for(const k in L)if(!v[k])er.push(L[k]+' is required.');
+  if(v.start&&v.end&&v.end<v.start)er.push('End date cannot be before the start date.');
+  if(er.length)return msg('projMsg','err',er);
+  const p=Object.assign({id:S.uid++},v);S.projects.push(p);
+  e.target.reset();setActive(p.id);
+  msg('projMsg','ok',['Project "'+p.name+'" added and selected.']);
+});
+function delProj(id){
+  const p=proj(id);if(!p)return;
+  const n=casesOf(id).length;
+  if(!confirm('Delete project "'+p.name+'" (build '+p.build+') and its '+n+' test case(s)? This cannot be undone.'))return;
+  S.cases=S.cases.filter(c=>c.pid!==id);S.projects=S.projects.filter(x=>x.id!==id);
+  setActive(S.projects.length?S.projects[0].id:null);
+}
+function renderProjects(){
+  if(!S.projects.length){$('projTable').innerHTML='<div class="card empty">No projects yet.</div>';return;}
+  $('projTable').innerHTML='<table><thead><tr><th>Name</th><th>Build</th><th>Environment</th><th>OS</th><th>Device</th><th>Start</th><th>End</th><th>Cases</th><th>Actions</th></tr></thead><tbody>'+
+  S.projects.map(p=>'<tr><td>'+esc(p.name)+(p.id===S.active?' <span class="badge ok">active</span>':'')+'</td><td>'+esc(p.build)+'</td><td>'+esc(p.env)+'</td><td>'+esc(p.os)+'</td><td>'+esc(p.device)+'</td><td>'+esc(p.start)+'</td><td>'+esc(p.end)+'</td><td class="n">'+casesOf(p.id).length+'</td><td><button class="btn sm" data-act="useProj" data-id="'+p.id+'">Select</button> <button class="btn sm del" data-act="delProj" data-id="'+p.id+'">Delete</button></td></tr>').join('')+'</tbody></table>';
+}
+
+/* ---------- test cases ---------- */
+function resetCaseForm(){
+  S.editCase=null;$('caseForm').reset();$('caseTitle').textContent='Add test case';$('caseSave').textContent='Add test case';$('caseCancel').hidden=true;
+}
+$('caseCancel').addEventListener('click',()=>{resetCaseForm();clearMsg('caseMsg');});
+$('caseForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  if(!S.active)return msg('caseMsg','err',['Create or select a project first.']);
+  const v={type:val('cType'),module:val('cModule'),sub:val('cSub'),func:val('cFunc'),actions:val('cActions'),expected:val('cExpected')};
+  const L={type:'Test type',module:'Module',sub:'Submodule',func:'Functionality',actions:'Actions',expected:'Expected result'};
+  const er=[];for(const k in L)if(!v[k])er.push(L[k]+' is required.');
+  if(er.length)return msg('caseMsg','err',er);
+  const n=s=>s.toLowerCase().replace(/\s+/g,' ').trim();
+  const dup=S.cases.find(c=>c.pid===S.active&&c.id!==S.editCase&&n(c.module)===n(v.module)&&n(c.func)===n(v.func)&&n(c.actions)===n(v.actions));
+  if(dup)return msg('caseMsg','err',['Duplicate test case: the same module, functionality and actions already exist as '+tcId(dup)+'.']);
+  let text;
+  if(S.editCase){Object.assign(S.cases.find(c=>c.id===S.editCase),v);text='Test case updated.';}
+  else{const c=Object.assign({id:S.uid++,pid:S.active,result:'Not tested',comment:'',bugId:'',tester:'',time:'',shot:''},v);S.cases.push(c);text='Test case '+tcId(c)+' added.';}
+  resetCaseForm();msg('caseMsg','ok',[text]);render();
+});
+function editCase(id){
+  const c=S.cases.find(x=>x.id===id);if(!c)return;
+  S.editCase=id;
+  $('cType').value=c.type;$('cModule').value=c.module;$('cSub').value=c.sub;$('cFunc').value=c.func;$('cActions').value=c.actions;$('cExpected').value=c.expected;
+  $('caseTitle').textContent='Edit test case '+tcId(c);$('caseSave').textContent='Save changes';$('caseCancel').hidden=false;
+  clearMsg('caseMsg');$('caseForm').scrollIntoView({behavior:'smooth'});
+}
+function delCase(id){
+  const c=S.cases.find(x=>x.id===id);if(!c)return;
+  if(!confirm('Delete test case '+tcId(c)+' ('+c.func+')? This cannot be undone.'))return;
+  S.cases=S.cases.filter(x=>x.id!==id);
+  if(S.editCase===id)resetCaseForm();
+  if(S.execCase===id)closeExec();
+  render();
+}
+function renderCases(){
+  $('casesNoProj').innerHTML=S.active?'':noProj();
+  const list=S.active?casesOf(S.active):[];
+  $('moduleList').innerHTML=[...new Set(list.map(c=>c.module))].map(m=>'<option value="'+esc(m)+'">').join('');
+  if(!list.length){$('caseTable').innerHTML='<div class="card empty">No test cases in this project.</div>';return;}
+  $('caseTable').innerHTML='<table><thead><tr><th>ID</th><th>Type</th><th>Module</th><th>Submodule</th><th>Functionality</th><th>Actions</th><th>Expected result</th><th>Actions</th></tr></thead><tbody>'+
+  list.map(c=>'<tr><td>'+tcId(c)+'</td><td>'+esc(c.type)+'</td><td>'+esc(c.module)+'</td><td>'+esc(c.sub)+'</td><td>'+esc(c.func)+'</td><td style="white-space:pre-wrap">'+esc(c.actions)+'</td><td style="white-space:pre-wrap">'+esc(c.expected)+'</td><td style="white-space:nowrap"><button class="btn sm" data-act="editCase" data-id="'+c.id+'">Edit</button> <button class="btn sm del" data-act="delCase" data-id="'+c.id+'">Delete</button></td></tr>').join('')+'</tbody></table>';
+}
+
+/* ---------- execution ---------- */
+$('eResult').innerHTML=RESULTS.map(r=>'<option>'+r+'</option>').join('');
+function showPreview(src){$('ePreview').innerHTML=src?'<img class="thumb" src="'+src+'" alt="Screenshot preview"><br><button type="button" class="btn sm" id="shotRemove">Remove screenshot</button>':'';
+  const b=$('shotRemove');if(b)b.addEventListener('click',()=>{S.pendingShot=null;$('eShot').value='';showPreview('');});}
+$('eShot').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;
+  if(!/^image\//.test(f.type)){e.target.value='';return msg('execMsg','err',['Screenshot must be an image file.']);}
+  if(f.size>5*1024*1024){e.target.value='';return msg('execMsg','err',['Screenshot is larger than 5 MB.']);}
+  const r=new FileReader();r.onload=()=>{S.pendingShot=r.result;showPreview(r.result);clearMsg('execMsg');};r.readAsDataURL(f);
+});
+function openExec(id){
+  const c=S.cases.find(x=>x.id===id);if(!c)return;
+  S.execCase=id;S.pendingShot=undefined;
+  $('execTitle').textContent='Execute '+tcId(c)+': '+label(c);
+  $('eResult').value=c.result;$('eComment').value=c.comment;$('eTester').value=c.tester;$('eTime').value=c.time;$('eShot').value='';
+  showPreview(c.shot);clearMsg('execMsg');$('execForm').hidden=false;$('execForm').scrollIntoView({behavior:'smooth'});
+}
+function closeExec(){S.execCase=null;S.pendingShot=undefined;$('execForm').hidden=true;}
+$('execClose').addEventListener('click',closeExec);
+$('execForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const c=S.cases.find(x=>x.id===S.execCase);if(!c)return;
+  const result=$('eResult').value,comment=val('eComment'),tester=val('eTester'),timeRaw=val('eTime');
+  const er=[],executed=result==='Passed'||result==='Failed';
+  if(result==='Failed'&&!BUG.test(comment))er.push('A Failed result requires a Bug ID in the comment, in the format QATC-1234567.');
+  if(result==='Passed'){
+    if(BUG.test(comment))er.push('A Passed result must not keep a Bug ID. Remove it from the comment.');
+    if(c.result==='Failed'&&(!comment||!/retest/i.test(comment)||comment===c.comment))er.push('Changing Failed to Passed requires a new retest comment (it must mention the retest, e.g. "Retested on build 12, works").');
+  }
+  if(executed&&!tester)er.push('Tester is required for Passed or Failed results.');
+  if(timeRaw!==''||executed){
+    const t=Number(timeRaw.replace(',','.'));
+    if(timeRaw===''||!isFinite(t)||t<=0)er.push('Time spent must be a positive number of minutes.');
+  }
+  if(er.length)return msg('execMsg','err',er);
+  c.result=result;c.comment=comment;c.tester=tester;c.time=timeRaw===''?'':Number(timeRaw.replace(',','.'));
+  c.bugId=result==='Failed'?comment.match(BUG)[0]:'';
+  if(S.pendingShot!==undefined)c.shot=S.pendingShot||'';
+  S.pendingShot=undefined;
+  msg('execMsg','ok',['Result saved for '+tcId(c)+'.']);render();
+});
+function showShot(id){const c=S.cases.find(x=>x.id===id);if(!c||!c.shot)return;$('modalImg').src=c.shot;$('modal').hidden=false;}
+$('modalClose').addEventListener('click',()=>{$('modal').hidden=true;});
+$('modal').addEventListener('click',e=>{if(e.target===$('modal'))$('modal').hidden=true;});
+function renderExec(){
+  $('execNoProj').innerHTML=S.active?'':noProj();
+  if(S.execCase&&!S.cases.some(c=>c.id===S.execCase))closeExec();
+  const list=S.active?casesOf(S.active):[];
+  if(!list.length){$('execTable').innerHTML='<div class="card empty">No test cases to execute.</div>';return;}
+  $('execTable').innerHTML='<table><thead><tr><th>ID</th><th>Test case</th><th>Result</th><th>Tester</th><th>Time (min)</th><th>Bug ID</th><th>Screenshot</th><th>Action</th></tr></thead><tbody>'+
+  list.map(c=>'<tr><td>'+tcId(c)+'</td><td>'+esc(label(c))+'</td><td>'+resBadge(c.result)+'</td><td>'+esc(c.tester)+'</td><td class="n">'+esc(c.time)+'</td><td>'+esc(c.bugId)+'</td><td>'+(c.shot?'<button class="btn sm" data-act="shot" data-id="'+c.id+'">View</button>':'–')+'</td><td><button class="btn sm pri" data-act="exec" data-id="'+c.id+'">Execute</button></td></tr>').join('')+'</tbody></table>';
+}
+
+/* ---------- bug linking ---------- */
+function saveBug(id){
+  const c=S.cases.find(x=>x.id===id);if(!c)return;
+  const v=$('bug_'+id).value.trim();
+  if(!/^QATC-\d+$/.test(v))return msg('bugMsg','err',['Invalid Bug ID "'+v+'". Use QATC- followed by digits, e.g. QATC-1234567.']);
+  c.comment=BUG.test(c.comment)?c.comment.replace(BUG,v):(c.comment?c.comment+' ':'')+'Bug: '+v;
+  c.bugId=v;msg('bugMsg','ok',['Bug ID '+v+' linked to '+tcId(c)+' (added to its comment).']);render();
+}
+function renderBugs(){
+  if(!S.active){$('bugTable').innerHTML=noProj();return;}
+  const list=casesOf(S.active).filter(c=>c.result==='Failed');
+  if(!list.length){$('bugTable').innerHTML='<div class="card empty">No failed cases in this project.</div>';return;}
+  $('bugTable').innerHTML='<table><thead><tr><th>ID</th><th>Test case</th><th>Comment</th><th>Bug ID</th><th>Link status</th><th>Add / change Bug ID</th></tr></thead><tbody>'+
+  list.map(c=>{const ok=BUG.test(c.bugId||'');return '<tr><td>'+tcId(c)+'</td><td>'+esc(label(c))+'</td><td style="white-space:pre-wrap">'+esc(c.comment)+'</td><td>'+esc(c.bugId)+'</td><td>'+(ok?'<span class="badge ok">Linked</span>':'<span class="badge bad">Missing</span>')+'</td><td style="white-space:nowrap"><input id="bug_'+c.id+'" placeholder="QATC-1234567" value="'+esc(c.bugId)+'" style="width:150px"> <button class="btn sm pri" data-act="saveBug" data-id="'+c.id+'">Save</button></td></tr>';}).join('')+'</tbody></table>';
+}
+
+/* ---------- statistics ---------- */
+function renderStats(){
+  if(!S.projects.length){$('statProj').innerHTML='<div class="card empty">No projects yet.</div>';}
+  else $('statProj').innerHTML='<table><thead><tr><th>Project</th><th>Build</th><th>Total</th><th>Passed</th><th>Failed</th><th>Not tested</th><th>Not available</th><th>Not implemented</th><th>Pass %</th><th>Total hours</th><th>Release</th></tr></thead><tbody>'+
+  S.projects.map(p=>{const r=release(casesOf(p.id)),s=r.s;return '<tr><td>'+esc(p.name)+'</td><td>'+esc(p.build)+'</td><td class="n">'+s.t+'</td><td class="n">'+s.p+'</td><td class="n">'+s.f+'</td><td class="n">'+s.n+'</td><td class="n">'+s.na+'</td><td class="n">'+s.ni+'</td><td class="n">'+s.pp+'%</td><td class="n">'+s.hours+'</td><td>'+relBadge(r.ready)+'</td></tr>';}).join('')+'</tbody></table>';
+  if(!S.active){$('statRelease').innerHTML=noProj();$('statMod').innerHTML='';return;}
+  const list=casesOf(S.active),r=release(list);
+  $('statRelease').innerHTML='<div class="card">'+relBadge(r.ready)+' '+(r.ready?'Pass rate is at least 90% and every failed case has a Bug ID.':'<ul style="margin:6px 0 0">'+r.reasons.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>')+'</div>';
+  const mods=[...new Set(list.map(c=>c.module))];
+  if(!mods.length){$('statMod').innerHTML='<div class="card empty">No modules yet.</div>';return;}
+  $('statMod').innerHTML='<table><thead><tr><th>Module</th><th>Total</th><th>Passed</th><th>Failed</th><th>Pass rate</th><th></th></tr></thead><tbody>'+
+  mods.map(m=>{const s=stats(list.filter(c=>c.module===m));return '<tr><td>'+esc(m)+'</td><td class="n">'+s.t+'</td><td class="n">'+s.p+'</td><td class="n">'+s.f+'</td><td class="n">'+s.pp+'%</td><td><div class="bar"><i style="width:'+s.pp+'%"></i></div></td></tr>';}).join('')+'</tbody></table>';
+}
+
+/* ---------- dashboard / search ---------- */
+$('fProj').addEventListener('change',e=>{S.dashProj=e.target.value?+e.target.value:null;S.f={mod:'',res:'',tester:''};renderDash();});
+$('fMod').addEventListener('change',e=>{S.f.mod=e.target.value;renderDash();});
+$('fRes').addEventListener('change',e=>{S.f.res=e.target.value;renderDash();});
+$('fTester').addEventListener('change',e=>{S.f.tester=e.target.value;renderDash();});
+$('fReset').addEventListener('click',()=>{S.f={mod:'',res:'',tester:''};renderDash();});
+function renderDash(){
+  const scope=S.dashProj?casesOf(S.dashProj):S.cases;
+  const mods=[...new Set(scope.map(c=>c.module))],testers=[...new Set(scope.map(c=>c.tester).filter(Boolean))];
+  if(!mods.includes(S.f.mod))S.f.mod='';if(!testers.includes(S.f.tester))S.f.tester='';
+  fillSel('fProj',[['','All projects']].concat(S.projects.map(p=>[p.id,p.name+' (build '+p.build+')'])),S.dashProj);
+  fillSel('fMod',[['','All modules']].concat(mods.map(m=>[m,m])),S.f.mod);
+  fillSel('fRes',[['','All results']].concat(RESULTS.map(r=>[r,r])),S.f.res);
+  fillSel('fTester',[['','All testers']].concat(testers.map(t=>[t,t])),S.f.tester);
+  const list=scope.filter(c=>(!S.f.mod||c.module===S.f.mod)&&(!S.f.res||c.result===S.f.res)&&(!S.f.tester||c.tester===S.f.tester));
+  const s=stats(list);
+  $('dashTiles').innerHTML=[['Total',s.t],['Passed',s.p+' ('+s.pp+'%)'],['Failed',s.f+' ('+s.fp+'%)'],['Not tested',s.n+' ('+s.np+'%)'],['Total hours',s.hours]].map(x=>'<div class="tile"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('');
+  if(!list.length){$('dashTable').innerHTML='<div class="card empty">No matching test cases.</div>';return;}
+  $('dashTable').innerHTML='<table><thead><tr><th>Project</th><th>ID</th><th>Module</th><th>Functionality</th><th>Result</th><th>Tester</th><th>Bug ID</th><th>Time (min)</th></tr></thead><tbody>'+
+  list.map(c=>{const p=proj(c.pid);return '<tr><td>'+esc(p?p.name:'')+'</td><td>'+tcId(c)+'</td><td>'+esc(c.module+' > '+c.sub)+'</td><td>'+esc(c.func)+'</td><td>'+resBadge(c.result)+'</td><td>'+esc(c.tester)+'</td><td>'+esc(c.bugId)+'</td><td class="n">'+esc(c.time)+'</td></tr>';}).join('')+'</tbody></table>';
+}
+
+/* ---------- Excel export (built-in .xlsx writer, no libraries) ---------- */
+function crc32(b){
+  if(!crc32.t){crc32.t=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;crc32.t[n]=c>>>0;}}
+  let crc=0xFFFFFFFF;for(let i=0;i<b.length;i++)crc=crc32.t[(crc^b[i])&255]^(crc>>>8);return(crc^0xFFFFFFFF)>>>0;
+}
+function makeZip(files){
+  const enc=new TextEncoder(),parts=[],central=[];let offset=0;
+  const u16=v=>[v&255,(v>>>8)&255],u32=v=>[v&255,(v>>>8)&255,(v>>>16)&255,(v>>>24)&255];
+  files.forEach(f=>{
+    const name=enc.encode(f.name),data=enc.encode(f.data),crc=crc32(data),size=data.length;
+    const local=new Uint8Array([0x50,0x4b,3,4,...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(size),...u32(size),...u16(name.length),...u16(0)]);
+    parts.push(local,name,data);
+    central.push(new Uint8Array([0x50,0x4b,1,2,...u16(20),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(size),...u32(size),...u16(name.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(offset)]),name);
+    offset+=local.length+name.length+size;
+  });
+  let cdSize=0;central.forEach(x=>cdSize+=x.length);
+  const end=new Uint8Array([0x50,0x4b,5,6,...u16(0),...u16(0),...u16(files.length),...u16(files.length),...u32(cdSize),...u32(offset),...u16(0)]);
+  return new Blob([...parts,...central,end],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+const xe=s=>String(s==null?'':s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function colName(i){let s='';i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26);}return s;}
+/* cell: string | number | {v,s} where s = style index (1 bold, 2 header, 3 wrapped) */
+function sheetXml(rows,widths){
+  let x='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols>'+
+    widths.map((w,i)=>'<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+w+'" customWidth="1"/>').join('')+'</cols><sheetData>';
+  rows.forEach((row,r)=>{
+    x+='<row r="'+(r+1)+'">';
+    row.forEach((cell,c)=>{
+      if(cell===''||cell==null)return;
+      const o=typeof cell==='object'?cell:{v:cell},ref=colName(c)+(r+1),st=o.s?' s="'+o.s+'"':'';
+      if(typeof o.v==='number')x+='<c r="'+ref+'"'+st+'><v>'+o.v+'</v></c>';
+      else x+='<c r="'+ref+'" t="inlineStr"'+st+'><is><t xml:space="preserve">'+xe(o.v)+'</t></is></c>';
+    });
+    x+='</row>';
+  });
+  return x+'</sheetData></worksheet>';
+}
+function exportXlsx(){
+  if(!S.active)return msg('exportMsg','err',['Create or select a project first.']);
+  const p=proj(S.active),list=casesOf(p.id);
+  if(!list.length)return msg('exportMsg','err',['This project has no test cases to export.']);
+  const r=release(list),s=r.s,B=v=>({v,s:1}),H=v=>({v,s:2}),W=v=>({v,s:3});
+  const rows=[
+    [B('Project'),p.name],[B('Build number'),p.build],[B('Environment'),p.env],[B('OS'),p.os],[B('Device'),p.device],[B('Dates'),p.start+' to '+p.end],[],
+    ['Module','Functionality','Actions','Expected Result','Result','Comment','Bug ID','Tester','Time Spent (min)'].map(H)
+  ];
+  list.forEach(c=>rows.push([W(c.module+' > '+c.sub),W(c.func),W(c.actions),W(c.expected),c.result,W(c.comment),c.bugId,c.tester,c.time===''?'':Number(c.time)]));
+  rows.push([],[B('Statistics'),B('Count'),B('%')],
+    ['Total test cases',s.t,100],['Passed',s.p,s.pp],['Failed',s.f,s.fp],['Not tested',s.n,s.np],['Not available',s.na,s.nap],['Not implemented',s.ni,s.nip],
+    ['Total time (hours)',s.hours],['Release status',r.ready?'Ready':'Not ready']);
+  const safe=t=>String(t).replace(/[\\\/\?\*\[\]:]/g,' ').trim();
+  const sheetName=(safe(p.name)||'Project').slice(0,31);
+  const ns='http://schemas.openxmlformats.org/';
+  const files=[
+    {name:'[Content_Types].xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="'+ns+'package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'},
+    {name:'_rels/.rels',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="'+ns+'package/2006/relationships"><Relationship Id="rId1" Type="'+ns+'officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'},
+    {name:'xl/workbook.xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="'+ns+'spreadsheetml/2006/main" xmlns:r="'+ns+'officeDocument/2006/relationships"><sheets><sheet name="'+xe(sheetName)+'" sheetId="1" r:id="rId1"/></sheets></workbook>'},
+    {name:'xl/_rels/workbook.xml.rels',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="'+ns+'package/2006/relationships"><Relationship Id="rId1" Type="'+ns+'officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="'+ns+'officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'},
+    {name:'xl/styles.xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="'+ns+'spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFD9E2F3"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf></cellXfs></styleSheet>'},
+    {name:'xl/worksheets/sheet1.xml',data:sheetXml(rows,[26,28,40,40,16,34,16,16,16])}
+  ];
+  const blob=makeZip(files),a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download='TestCases_'+(safe(p.name)||'project').replace(/\s+/g,'_')+'_build_'+(safe(p.build)||'x').replace(/\s+/g,'_')+'.xlsx';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+  msg('exportMsg','ok',['Downloaded '+a.download+'.']);
+}
+function renderExport(){
+  if(!S.active){$('exportBox').innerHTML=noProj();return;}
+  const p=proj(S.active),r=release(casesOf(p.id)),s=r.s;
+  $('exportBox').innerHTML='<p style="margin-top:0"><b>'+esc(p.name)+'</b> (build '+esc(p.build)+') · '+s.t+' test cases · pass rate '+s.pp+'% · '+relBadge(r.ready)+'</p><button class="btn pri" type="button" id="exportBtn">Download .xlsx</button>';
+  $('exportBtn').addEventListener('click',exportXlsx);
+}
+
+/* ---------- global ---------- */
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;
+  const id=+b.dataset.id,a=b.dataset.act;
+  if(a==='editCase')editCase(id);
+  else if(a==='delCase')delCase(id);
+  else if(a==='delProj')delProj(id);
+  else if(a==='useProj')setActive(id);
+  else if(a==='exec')openExec(id);
+  else if(a==='saveBug')saveBug(id);
+  else if(a==='shot')showShot(id);
+});
+function renderHead(){
+  const sel=$('activeProject');
+  sel.innerHTML=S.projects.length?S.projects.map(p=>'<option value="'+p.id+'">'+esc(p.name)+' (build '+esc(p.build)+')</option>').join(''):'<option value="">No projects</option>';
+  sel.value=S.active==null?'':String(S.active);
+  $('headBadge').innerHTML=S.active?'Release: '+relBadge(release(casesOf(S.active)).ready):'';
+}
+function render(){renderHead();renderProjects();renderCases();renderExec();renderBugs();renderStats();renderExport();renderDash();}
+render();
+</script>
+</body>
+</html>
